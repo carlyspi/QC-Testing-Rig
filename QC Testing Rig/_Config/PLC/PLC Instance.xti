@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<TcSmItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.26" ClassName="CTComPlcObjDef">
+	<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" XtvPath="PLC\PLC Instance.xtv">
+		<Name>__FILENAME__</Name>
+		<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
+		<Contexts>
+			<Context>
+				<Id>0</Id>
+				<Name>PlcTask</Name>
+				<ManualConfig>
+					<OTCID>#x02010030</OTCID>
+				</ManualConfig>
+				<Priority>20</Priority>
+				<CycleTime>10000000</CycleTime>
+			</Context>
+		</Contexts>
+		<JsonDynPous><![CDATA[null]]></JsonDynPous>
+		<TaskPouOids>
+			<TaskPouOid Prio="20" OTCID="#x08502001"/>
+		</TaskPouOids>
+	</Instance>
+	<Mappings>
+		<OwnerA>
+			<OwnerB Name="TIID^Device 1 (EtherCAT)^Term 1 (EK1100)^Term 2 (EL1918)">
+				<Link VarA="PlcTask Inputs^GVL.bEstopPushButton" VarB="StandardInputs^Standard Out Var 6" Size="1"/>
+				<Link VarA="PlcTask Inputs^GVL.bEstopSet" VarB="StandardInputs^Standard Out Var 5" Size="1"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Device 1 (EtherCAT)^Term 1 (EK1100)^Term 4 (EL1417)">
+				<Link VarA="PlcTask Inputs^GVL.bCylinderExtended" VarB="DIP Inputs^Input Channel 4" Size="1"/>
+				<Link VarA="PlcTask Inputs^GVL.bCylinderRetracted" VarB="DIP Inputs^Input Channel 3" Size="1"/>
+				<Link VarA="PlcTask Inputs^GVL.bCylinderTravelLimit" VarB="DIP Inputs^Input Channel 5" Size="1"/>
+				<Link VarA="PlcTask Inputs^GVL.bStart" VarB="DIP Inputs^Input Channel 1" Size="1"/>
+				<Link VarA="PlcTask Inputs^GVL.bStop" VarB="DIP Inputs^Input Channel 2" Size="1"/>
+			</OwnerB>
+		</OwnerA>
+	</Mappings>
+</TcSmItem>

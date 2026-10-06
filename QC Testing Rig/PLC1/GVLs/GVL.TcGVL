@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <GVL Name="GVL" Id="{e5482e64-c0b8-4d6e-a9c7-c933ac3682bc}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	bCylinderRetracted		AT%I* : BOOL; //Position sensor if the cylinder is retracted
+	bCylinderExtended		AT%I* : BOOL; //Position sensor if the cylinder is extended
+	bCylinderTravelLimit	AT%I* : BOOL; //Position sensor if the cylinder is fully extended, indicating broken bracket
+	bCylinderTrigger		AT%Q* : BOOL; //Signal that actuates the cylinder
+	
+	bStart					AT%I* : BOOL; //Start push button
+	bStop					AT%I* : BOOL; //Stop push button
+	bRun					AT%Q* : BOOL; //Start the safety logic
+	
+	bEstopOK				AT%I* : BOOL; //E Stop status
+	bEstopLED				AT%Q* : BOOL; //Turn on LED when
+	bEstopPushButton		AT%I* : BOOL; //E Stop button 
+	
+	bRestart				AT%Q* : BOOL; //Used as restart input for the safety project
+	bErrorAck				AT%Q* : BOOL;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

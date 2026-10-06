@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="MAIN" Id="{664aa400-0895-4cfa-9d43-ca4e3b350171}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	cycleCount	: INT; //Number of cycles completed
+	cycleLimit	: INT; //Number of cycles to complete before stopping
+	
+	iStep : E_CylinderCycle := E_CylinderCycle.startCheck;
+	
+	bRunning		: BOOL; //State of the machine
+	
+	rStartTrigger	: R_TRIG;
+	fStopTrigger	: F_TRIG;
+	
+	tonTimeout		: TON;
+	tMoveTimeout	: TIME := T#10S;   // max time allowed for a move
+	
+	tpSafetyReset	: TP;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[GVL.bRun := TRUE; //Start safety
+GVL.bEstopLED := NOT GVL.bEstopPushButton;
+
+cycleLimit := 10; //Number of cycles to complete
+
+//Start button pressed
+rStartTrigger(CLK := GVL.bStart);
+//Stop button pressed
+fStopTrigger(CLK := GVL.bStop);
+
+// Reset pulse only when: safety is tripped, E-stop is physically released, and not running
+tpSafetyReset(IN := rStartTrigger.Q
+                    AND GVL.bEstopOK = FALSE
+                    AND GVL.bEstopPushButton = TRUE,
+              PT := T#500MS);
+
+GVL.bRestart := tpSafetyReset.Q; 
+
+//Run mode of the machine
+IF rStartTrigger.Q = TRUE THEN
+	bRunning := TRUE;
+END_IF
+IF fStopTrigger.Q = TRUE THEN
+	bRunning := FALSE;
+END_IF
+
+// Timeout only runs while waiting for a sensor confirmation
+tonTimeout(IN := (iStep = E_CylinderCycle.verifyExtension)
+              OR (iStep = E_CylinderCycle.verifyRetraction),
+           PT := tMoveTimeout);
+
+IF GVL.bEstopOK = FALSE THEN
+	bRunning := FALSE;
+	GVL.bCylinderTrigger := FALSE;
+	iStep := E_CylinderCycle.startCheck;
+ELSE
+	CASE iStep OF
+		E_CylinderCycle.startCheck:
+			IF bRunning = TRUE THEN
+				IF cycleCount < cycleLimit THEN
+					iStep := E_CylinderCycle.extendCylinder;
+				ELSE
+					bRunning := FALSE;
+				END_IF
+				
+			END_IF
+			//Reset the count only when a new run begins
+			IF rStartTrigger.Q AND cycleCount >= cycleLimit THEN
+				cycleCount := 0;
+				bRunning := TRUE;
+			END_IF
+			
+		E_CylinderCycle.extendCylinder:
+			GVL.bCylinderTrigger := TRUE;
+			iStep := E_CylinderCycle.verifyExtension;
+			
+		E_CylinderCycle.verifyExtension:
+			IF GVL.bCylinderExtended = TRUE AND GVL.bCylinderRetracted = FALSE AND GVL.bCylinderTravelLimit = FALSE THEN
+				iStep := E_CylinderCycle.retractCylinder;
+			ELSIF GVL.bCylinderExtended = FALSE AND GVL.bCylinderRetracted = FALSE AND GVL.bCylinderTravelLimit = TRUE THEN
+				GVL.bCylinderTrigger := FALSE;
+				bRunning := FALSE;
+				iStep := E_CylinderCycle.startCheck;
+			ELSIF tonTimeout.Q = TRUE THEN
+				iStep := E_CylinderCycle.cylinderFault;					
+			END_IF
+			
+		E_CylinderCycle.retractCylinder:
+			GVL.bCylinderTrigger := FALSE;
+			iStep := E_CylinderCycle.verifyRetraction;	
+			
+		E_CylinderCycle.verifyRetraction:
+			IF GVL.bCylinderExtended = FALSE AND GVL.bCylinderRetracted = TRUE AND GVL.bCylinderTravelLimit = FALSE THEN
+				cycleCount := cycleCount + 1;
+				iStep := E_CylinderCycle.startCheck;
+			ELSIF tonTimeout.Q = TRUE THEN
+				iStep := E_CylinderCycle.cylinderFault;
+			END_IF
+			
+		E_CylinderCycle.cylinderFault:
+			bRunning := FALSE;
+			GVL.bCylinderTrigger := FALSE;     // drive to a safe state
+			IF rStartTrigger.Q THEN            // operator acknowledges with Start
+				cycleCount := 0;
+				bRunning := TRUE;
+				iStep := E_CylinderCycle.startCheck;
+			END_IF
+	END_CASE
+END_IF]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

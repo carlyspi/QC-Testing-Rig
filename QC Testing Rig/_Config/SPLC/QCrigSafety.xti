@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<TcSmItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.26" ClassName="CSafetyPlcProjDef">
+	<Project GUID="{643BB7DC-3AB6-41A9-983E-A8C5F3393948}" Name="QCrigSafety" PrjFilePath="..\..\QCrigSafety\QCrigSafety.splcproj" TmcFilePath="..\..\QCrigSafety\QCrigSafety.tmc" GeneralArchiveSettings="#x000f" TargetArchiveSettings="#x0007" FileArchiveSettings="#x000e">
+		<Instance File="QCrigSafety Instance.xti"/>
+	</Project>
+</TcSmItem>
