@@ -17,6 +17,11 @@ VAR
 	tMoveTimeout	: TIME := T#10S;   // max time allowed for a move
 	
 	tpSafetyReset	: TP;
+	
+	tonBlinkSlow		: TON;	// green, waiting
+	tonBlinkFast		: TON;	// red, fault
+	bBlinkSlow		: BOOL;
+	bBlinkFast		: BOOL;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -24,6 +29,17 @@ END_VAR
 GVL.bEstopLED := NOT GVL.bEstopPushButton;
 
 cycleLimit := 10; //Number of cycles to complete
+
+//Blink generators (free-running): the timer restarts itself each time it expires
+tonBlinkSlow(IN := NOT tonBlinkSlow.Q, PT := T#1000MS);
+IF tonBlinkSlow.Q THEN
+	bBlinkSlow := NOT bBlinkSlow;
+END_IF
+
+tonBlinkFast(IN := NOT tonBlinkFast.Q, PT := T#250MS);
+IF tonBlinkFast.Q THEN
+	bBlinkFast := NOT bBlinkFast;
+END_IF
 
 //Start button pressed
 rStartTrigger(CLK := GVL.bStart);
@@ -46,6 +62,10 @@ IF fStopTrigger.Q = TRUE THEN
 	bRunning := FALSE;
 END_IF
 
+IF bRunning = TRUE THEN
+	GVL.bRedLED := TRUE;
+END_IF
+
 // Timeout only runs while waiting for a sensor confirmation
 tonTimeout(IN := (iStep = E_CylinderCycle.verifyExtension)
               OR (iStep = E_CylinderCycle.verifyRetraction),
@@ -54,11 +74,17 @@ tonTimeout(IN := (iStep = E_CylinderCycle.verifyExtension)
 IF GVL.bEstopOK = FALSE THEN
 	bRunning := FALSE;
 	GVL.bCylinderTrigger := FALSE;
+	GVL.bGreenLED   := TRUE;
+	GVL.bRedLED := FALSE;
 	iStep := E_CylinderCycle.startCheck;
 ELSE
 	CASE iStep OF
 		E_CylinderCycle.startCheck:
+			// Waiting: green blinking, red off
+			GVL.bGreenLED := bBlinkSlow;
+			GVL.bRedLED   := FALSE;
 			IF bRunning = TRUE THEN
+				GVL.bGreenLED := FALSE;
 				IF cycleCount < cycleLimit THEN
 					iStep := E_CylinderCycle.extendCylinder;
 				ELSE
@@ -102,6 +128,9 @@ ELSE
 		E_CylinderCycle.cylinderFault:
 			bRunning := FALSE;
 			GVL.bCylinderTrigger := FALSE;     // drive to a safe state
+			// Fault: red flashing, green off
+			GVL.bRedLED   := bBlinkSlow;
+			GVL.bGreenLED := FALSE;
 			IF rStartTrigger.Q THEN            // operator acknowledges with Start
 				cycleCount := 0;
 				bRunning := TRUE;

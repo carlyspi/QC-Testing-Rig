@@ -45,6 +45,8 @@
 			<OwnerB Name="TIID^Device 1 (EtherCAT)^Term 1 (EK1100)^Term 5 (EL2407)">
 				<Link VarA="PlcTask Outputs^GVL.bCylinderTrigger" VarB="Channel 2^Output" Size="1"/>
 				<Link VarA="PlcTask Outputs^GVL.bEstopLED" VarB="Channel 1^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^GVL.bGreenLED" VarB="Channel 3^Output" Size="1"/>
+				<Link VarA="PlcTask Outputs^GVL.bRedLED" VarB="Channel 4^Output" Size="1"/>
 			</OwnerB>
 		</OwnerA>
 	</Mappings>
