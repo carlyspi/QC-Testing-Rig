@@ -74,15 +74,19 @@ tonTimeout(IN := (iStep = E_CylinderCycle.verifyExtension)
 IF GVL.bEstopOK = FALSE THEN
 	bRunning := FALSE;
 	GVL.bCylinderTrigger := FALSE;
-	GVL.bGreenLED   := TRUE;
-	GVL.bRedLED := FALSE;
+	cycleCount := 0;
+	GVL.bGreenLED   := FALSE;
+	GVL.bRedLED := bBlinkSlow;
 	iStep := E_CylinderCycle.startCheck;
 ELSE
 	CASE iStep OF
 		E_CylinderCycle.startCheck:
-			// Waiting: green blinking, red off
-			GVL.bGreenLED := bBlinkSlow;
-			GVL.bRedLED   := FALSE;
+			IF cycleCount >= cycleLimit OR cycleCount = 0 THEN
+				GVL.bGreenLED := TRUE;
+				GVL.bRedLED := FALSE;
+			ELSE
+				GVL.bGreenLED := bBlinkSlow;
+			END_IF
 			IF bRunning = TRUE THEN
 				GVL.bGreenLED := FALSE;
 				IF cycleCount < cycleLimit THEN
@@ -108,7 +112,7 @@ ELSE
 			ELSIF GVL.bCylinderExtended = FALSE AND GVL.bCylinderRetracted = FALSE AND GVL.bCylinderTravelLimit = TRUE THEN
 				GVL.bCylinderTrigger := FALSE;
 				bRunning := FALSE;
-				iStep := E_CylinderCycle.startCheck;
+				iStep := E_CylinderCycle.cylinderFault;
 			ELSIF tonTimeout.Q = TRUE THEN
 				iStep := E_CylinderCycle.cylinderFault;					
 			END_IF
@@ -129,7 +133,7 @@ ELSE
 			bRunning := FALSE;
 			GVL.bCylinderTrigger := FALSE;     // drive to a safe state
 			// Fault: red flashing, green off
-			GVL.bRedLED   := bBlinkSlow;
+			GVL.bRedLED   := bBlinkFast;
 			GVL.bGreenLED := FALSE;
 			IF rStartTrigger.Q THEN            // operator acknowledges with Start
 				cycleCount := 0;
