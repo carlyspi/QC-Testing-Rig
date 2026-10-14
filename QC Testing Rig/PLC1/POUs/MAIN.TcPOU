@@ -28,7 +28,7 @@ END_VAR
       <ST><![CDATA[GVL.bRun := TRUE; //Start safety
 GVL.bEstopLED := NOT GVL.bEstopPushButton;
 
-cycleLimit := 10; //Number of cycles to complete
+cycleLimit := 1000; //Number of cycles to complete
 
 //Blink generators (free-running): the timer restarts itself each time it expires
 tonBlinkSlow(IN := NOT tonBlinkSlow.Q, PT := T#1000MS);
