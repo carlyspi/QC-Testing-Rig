@@ -13,6 +13,8 @@ VAR
 	rStartTrigger	: R_TRIG;
 	fStopTrigger	: F_TRIG;
 	
+	tonExtendTimer	: TON;
+	
 	tonTimeout		: TON;
 	tMoveTimeout	: TIME := T#10S;   // max time allowed for a move
 	
@@ -40,6 +42,8 @@ tonBlinkFast(IN := NOT tonBlinkFast.Q, PT := T#250MS);
 IF tonBlinkFast.Q THEN
 	bBlinkFast := NOT bBlinkFast;
 END_IF
+
+tonExtendTimer(PT := T#1000MS);
 
 //Start button pressed
 rStartTrigger(CLK := GVL.bStart);
@@ -74,6 +78,7 @@ tonTimeout(IN := (iStep = E_CylinderCycle.verifyExtension)
 IF GVL.bEstopOK = FALSE THEN
 	bRunning := FALSE;
 	GVL.bCylinderTrigger := FALSE;
+	tonExtendTimer.IN := FALSE;
 	cycleCount := 0;
 	GVL.bGreenLED   := FALSE;
 	GVL.bRedLED := bBlinkSlow;
@@ -108,6 +113,7 @@ ELSE
 			
 		E_CylinderCycle.verifyExtension:
 			IF GVL.bCylinderExtended = TRUE AND GVL.bCylinderRetracted = FALSE AND GVL.bCylinderTravelLimit = FALSE THEN
+				tonExtendTimer.IN := TRUE;
 				iStep := E_CylinderCycle.retractCylinder;
 			ELSIF GVL.bCylinderExtended = FALSE AND GVL.bCylinderRetracted = FALSE AND GVL.bCylinderTravelLimit = TRUE THEN
 				GVL.bCylinderTrigger := FALSE;
@@ -118,8 +124,11 @@ ELSE
 			END_IF
 			
 		E_CylinderCycle.retractCylinder:
-			GVL.bCylinderTrigger := FALSE;
-			iStep := E_CylinderCycle.verifyRetraction;	
+			IF tonExtendTimer.Q = TRUE THEN
+				GVL.bCylinderTrigger := FALSE;
+				tonExtendTimer.IN := FALSE;
+				iStep := E_CylinderCycle.verifyRetraction;
+			END_IF	
 			
 		E_CylinderCycle.verifyRetraction:
 			IF GVL.bCylinderExtended = FALSE AND GVL.bCylinderRetracted = TRUE AND GVL.bCylinderTravelLimit = FALSE THEN
